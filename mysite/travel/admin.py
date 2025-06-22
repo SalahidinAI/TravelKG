@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import *
-from modeltranslation.admin import TranslationAdmin
+from modeltranslation.admin import TranslationAdmin, TranslationInlineModelAdmin
 
 
 class GeneralMedia:
@@ -25,19 +25,29 @@ class CityAdmin(TranslationAdmin, GeneralMedia):
     pass
 
 
+class RegionMealInline(admin.TabularInline, TranslationInlineModelAdmin):
+    model = RegionMeal
+    extra = 1
+
+
 @admin.register(Region)
 class RegionAdmin(TranslationAdmin, GeneralMedia):
-    pass
+    inlines = [RegionMealInline]
 
 
-@admin.register(RegionMeal)
-class RegionMealAdmin(TranslationAdmin, GeneralMedia):
-    pass
+class AttractionInline(admin.TabularInline, TranslationInlineModelAdmin):
+    model = Attraction
+    extra = 1
+
+
+class EventInline(admin.TabularInline, TranslationInlineModelAdmin):
+    model = Event
+    extra = 1
 
 
 @admin.register(Place)
 class PlaceAdmin(TranslationAdmin, GeneralMedia):
-    pass
+    inlines = [AttractionInline, EventInline]
 
 
 @admin.register(Hotel)
@@ -75,16 +85,6 @@ class EventTypeAdmin(TranslationAdmin, GeneralMedia):
     pass
 
 
-@admin.register(Event)
-class EventAdmin(TranslationAdmin, GeneralMedia):
-    pass
-
-
-@admin.register(Attraction)
-class AttractionAdmin(TranslationAdmin, GeneralMedia):
-    pass
-
-
 @admin.register(CultureVariety)
 class CultureVarietyAdmin(TranslationAdmin, GeneralMedia):
     pass
@@ -95,19 +95,75 @@ class CultureAdmin(TranslationAdmin, GeneralMedia):
     pass
 
 
+class ReviewPlaceLikeInline(admin.TabularInline):
+    model = ReviewPlaceLike
+    extra = 1
+
+
+class ReviewPlaceAdmin(admin.ModelAdmin):
+    inlines = [ReviewPlaceLikeInline]
+
+
+class ReviewHotelLikeInline(admin.TabularInline):
+    model = ReviewHotelLike
+    extra = 1
+
+
+class ReviewHotelAdmin(admin.ModelAdmin):
+    inlines = [ReviewHotelLikeInline]
+
+
+class ReviewRestaurantLikeInline(admin.TabularInline):
+    model = ReviewRestaurantLike
+    extra = 1
+
+
+class ReviewRestaurantAdmin(admin.ModelAdmin):
+    inlines = [ReviewRestaurantLikeInline]
+
+
+class ReviewAttractionLikeInline(admin.TabularInline):
+    model = ReviewAttractionLike
+    extra = 1
+
+
+class ReviewAttractionAdmin(admin.ModelAdmin):
+    inlines = [ReviewAttractionLikeInline]
+
+
+class FavoritePlaceInline(admin.TabularInline):
+    model = FavoritePlace
+    extra = 1
+
+
+class FavoriteHotelInline(admin.TabularInline):
+    model = FavoriteHotel
+    extra = 1
+
+
+class FavoriteRestaurantInline(admin.TabularInline):
+    model = FavoriteHotel
+    extra = 1
+
+
+class FavoriteAttractionInline(admin.TabularInline):
+    model = FavoriteHotel
+    extra = 1
+
+
+class FavoriteAdmin(admin.ModelAdmin):
+    inlines = [FavoritePlaceInline, FavoriteHotelInline,
+               FavoriteRestaurantInline, FavoriteAttractionInline]
+
+
+admin.site.register(ReviewPlace, ReviewPlaceAdmin)
+admin.site.register(ReviewHotel, ReviewHotelAdmin)
+admin.site.register(ReviewRestaurant, ReviewRestaurantAdmin)
+admin.site.register(ReviewAttraction, ReviewAttractionAdmin)
+
+admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(UserProfile)
 admin.site.register(AbstractReview)
-admin.site.register(ReviewPlace)
-admin.site.register(ReviewPlaceLike)
-admin.site.register(Favorite)
-admin.site.register(FavoritePlace)
 admin.site.register(HotelImage)
 admin.site.register(HotelContact)
-admin.site.register(FavoriteHotel)
-admin.site.register(ReviewHotel)
-admin.site.register(ReviewHotelLike)
 admin.site.register(RestaurantImage)
-admin.site.register(ReviewRestaurant)
-admin.site.register(ReviewRestaurantLike)
-admin.site.register(ReviewAttraction)
-admin.site.register(ReviewAttractionLike)

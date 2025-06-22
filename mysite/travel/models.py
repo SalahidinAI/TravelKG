@@ -96,7 +96,7 @@ class Favorite(models.Model):
 class FavoritePlace(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
-    created_date = models.DateField(auto_now_add=True)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('place', 'favorite')
@@ -146,7 +146,7 @@ class HotelContact(models.Model):
 class FavoriteHotel(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
-    created_date = models.DateField(auto_now_add=True)
+    created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('hotel', 'favorite')
@@ -196,6 +196,15 @@ class RestaurantImage(models.Model):
     restaurant_image = models.ImageField(upload_to='restaurant_images/')
 
 
+class FavoriteRestaurant(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('restaurant', 'favorite')
+
+
 # check,p Are scores working well?
 class ReviewRestaurant(AbstractReview):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
@@ -206,7 +215,7 @@ class ReviewRestaurant(AbstractReview):
 
 
 class ReviewRestaurantLike(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(ReviewRestaurant, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     class Meta:
@@ -246,11 +255,20 @@ class ReviewAttraction(AbstractReview):
 
 
 class ReviewAttractionLike(models.Model):
-    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE)
+    attraction = models.ForeignKey(ReviewAttraction, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('attraction', 'user')
+
+
+class FavoriteAttraction(models.Model):
+    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE)
+    favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
+    created_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('attraction', 'favorite')
 
 
 class CultureVariety(models.Model):
