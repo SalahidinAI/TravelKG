@@ -1,7 +1,9 @@
 asgiref==3.8.1
 Django==5.2.3
+django-modeltranslation==0.19.15
 django-phonenumber-field==8.1.0
 djangorestframework==3.16.0
 phonenumbers==9.0.7
+pillow==11.2.1
 python-dotenv==1.1.0
 sqlparse==0.5.3

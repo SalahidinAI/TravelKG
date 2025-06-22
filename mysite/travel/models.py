@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 TEMPERATURE_CHOICES = (
     (i, str(i)) for i in range(-50, 50)
@@ -24,6 +25,11 @@ class UserProfile(AbstractUser):
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     phone_number = PhoneNumberField(unique=True, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
+
+    def clean(self):
+        super().clean()
+        if self.birthday and self.birthday > timezone.now().date():
+            raise ValidationError({'birthday': "Birthday can't be in the future."})
 
 
 # Add reset password logic
@@ -88,7 +94,7 @@ class Favorite(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
 
     # class Meta:
-        # ordering = 'created_date'
+    # ordering = 'created_date'
     #         check ordering, is it working well
 
 
@@ -167,7 +173,7 @@ class ReviewHotelLike(models.Model):
 
 
 class MealType(models.Model):
-    meal_type  = models.CharField(max_length=32, unique=True)
+    meal_type = models.CharField(max_length=32, unique=True)
 
 
 class SpecializedMenu(models.Model):
