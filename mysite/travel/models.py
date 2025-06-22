@@ -20,8 +20,8 @@ class City(models.Model):
 class UserProfile(AbstractUser):
     profile_photo = models.ImageField(upload_to='profile_photos/')
     banner = models.ImageField(upload_to='banner_photo/')
-    country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     phone_number = PhoneNumberField(unique=True, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
 
@@ -83,6 +83,7 @@ class ReviewPlaceLike(models.Model):
         unique_together = ('review_place', 'user')
 
 
+# logic not finished, add perform create
 class Favorite(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
 
@@ -108,11 +109,11 @@ class Hotel(models.Model):
     hotel_name = models.CharField(max_length=64)
     low_price = models.PositiveSmallIntegerField()
     high_price = models.PositiveSmallIntegerField()
-    bedrooms = models.PositiveSmallIntegerField()
-    bathrooms = models.PositiveSmallIntegerField()
-    cars = models.PositiveSmallIntegerField()
-    bikes = models.PositiveSmallIntegerField()
-    pets = models.PositiveSmallIntegerField()
+    bedrooms = models.PositiveSmallIntegerField(default=0)
+    bathrooms = models.PositiveSmallIntegerField(default=0)
+    cars = models.PositiveSmallIntegerField(default=0)
+    bikes = models.PositiveSmallIntegerField(default=0)
+    pets = models.PositiveSmallIntegerField(default=0)
     address = models.CharField(max_length=128, unique=True)
     description = models.TextField()
     kitchen = models.BooleanField(default=False)
@@ -220,7 +221,7 @@ class Event(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE)
     title = models.CharField(max_length=64)
-    description = models.TextField
+    description = models.TextField()
     date = models.DateField()
     ticket = models.BooleanField(default=True)
     address = models.CharField(max_length=128)
