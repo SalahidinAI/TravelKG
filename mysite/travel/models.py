@@ -4,9 +4,10 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-TEMPERATURE_CHOICES = (
+TEMPERATURE_CHOICES = [
     (i, str(i)) for i in range(-50, 50)
-)
+]
+
 
 class Country(models.Model):
     country_name = models.CharField(max_length=64, unique=True)
@@ -41,10 +42,11 @@ class Region(models.Model):
     region_name = models.CharField(max_length=32, unique=True)
     region_image = models.ImageField(upload_to='region_images/')
     description = models.TextField()
-    temperature = models.PositiveSmallIntegerField(choices=TEMPERATURE_CHOICES, null=True, blank=True)
+    temperature = models.SmallIntegerField(choices=TEMPERATURE_CHOICES)
 
     def __str__(self):
         return self.region_name
+
 
 class RegionMeal(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
@@ -60,7 +62,7 @@ class Place(models.Model):
     place_name = models.CharField(max_length=64, unique=True)
     place_image = models.ImageField(upload_to='place_images/')
     description = models.TextField()
-    temperature = models.PositiveSmallIntegerField(choices=TEMPERATURE_CHOICES, null=True, blank=True)
+    temperature = models.SmallIntegerField(choices=TEMPERATURE_CHOICES)
 
 
 # class PlaceMap(models.Model):
@@ -137,6 +139,11 @@ class Hotel(models.Model):
     towel = models.BooleanField(default=False)
     iron = models.BooleanField(default=False)
 
+    def clean(self):
+        super().clean()
+        if self.low_price > self.high_price:
+            raise ValidationError("'low_price' can't be higher than 'high_price'")
+
 
 class HotelImage(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
@@ -182,18 +189,19 @@ class MealType(models.Model):
     def __str__(self):
         return self.meal_type
 
+
 class SpecializedMenu(models.Model):
     specialized_menu = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
         return self.specialized_menu
 
+
 class MealTime(models.Model):
     meal_time = models.CharField(max_length=32, unique=True)
 
     def __str__(self):
         return self.meal_time
-
 
 
 # add restriction to prices
@@ -207,6 +215,11 @@ class Restaurant(models.Model):
     meal_time = models.ManyToManyField(MealTime)
     address = models.CharField(max_length=128, unique=True)
     phone = PhoneNumberField(unique=True)
+
+    def clean(self):
+        super().clean()
+        if self.low_price > self.high_price:
+            raise ValidationError("'low_price' can't be higher than 'high_price'")
 
 
 class RestaurantImage(models.Model):
@@ -295,6 +308,7 @@ class CultureVariety(models.Model):
 
     def __str__(self):
         return self.culture_variety_name
+
 
 class Culture(models.Model):
     culture_variety = models.ForeignKey(CultureVariety, on_delete=models.CASCADE)
