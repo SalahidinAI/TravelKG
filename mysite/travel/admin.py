@@ -85,14 +85,14 @@ class EventTypeAdmin(TranslationAdmin, GeneralMedia):
     pass
 
 
+class CultureInline(admin.TabularInline, TranslationInlineModelAdmin):
+    model = Culture
+    extra = 1
+
+
 @admin.register(CultureVariety)
 class CultureVarietyAdmin(TranslationAdmin, GeneralMedia):
-    pass
-
-
-@admin.register(Culture)
-class CultureAdmin(TranslationAdmin, GeneralMedia):
-    pass
+    inlines = [CultureInline]
 
 
 class ReviewPlaceLikeInline(admin.TabularInline):
