@@ -19,6 +19,9 @@ class Country(models.Model):
 class City(models.Model):
     city_name = models.CharField(max_length=64, unique=True)
 
+    def __str__(self):
+        return f'{self.city_name}'
+
 
 # add restriction to birthday
 class UserProfile(AbstractUser):
@@ -28,6 +31,9 @@ class UserProfile(AbstractUser):
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     phone_number = PhoneNumberField(unique=True, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.username}'
 
     def clean(self):
         super().clean()
@@ -56,6 +62,9 @@ class RegionMeal(models.Model):
     meal_image2 = models.ImageField(upload_to='meal_images/')
     meal_image3 = models.ImageField(upload_to='meal_images/')
 
+    def __str__(self):
+        return f'{self.region} {self.meal_name}'
+
 
 class Place(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
@@ -63,6 +72,9 @@ class Place(models.Model):
     place_image = models.ImageField(upload_to='place_images/')
     description = models.TextField()
     temperature = models.SmallIntegerField(choices=TEMPERATURE_CHOICES)
+
+    def __str__(self):
+        return f'{self.region} {self.place_name}'
 
 
 # class PlaceMap(models.Model):
@@ -81,15 +93,24 @@ class AbstractReview(models.Model):
     photo3 = models.ImageField(upload_to='review_photos/')
     text = models.TextField()
 
+    def __str__(self):
+        return f'{self.service_score}'
+
 
 class ReviewPlace(AbstractReview):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.place} {self.user}'
+
 
 class ReviewPlaceLike(models.Model):
     review_place = models.ForeignKey(ReviewPlace, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.review_place} {self.user}'
 
     class Meta:
         unique_together = ('review_place', 'user')
@@ -98,6 +119,9 @@ class ReviewPlaceLike(models.Model):
 # logic not finished, add perform create
 class Favorite(models.Model):
     user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.user}'
 
     # class Meta:
     # ordering = 'created_date'
@@ -109,6 +133,9 @@ class FavoritePlace(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.place} {self.favorite}'
 
     class Meta:
         unique_together = ('place', 'favorite')
@@ -139,6 +166,9 @@ class Hotel(models.Model):
     towel = models.BooleanField(default=False)
     iron = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'{self.hotel_name} {self.owner}'
+
     def clean(self):
         super().clean()
         if self.low_price > self.high_price:
@@ -149,21 +179,33 @@ class HotelImage(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     hotel_image = models.ImageField(upload_to='hotel_images/')
 
+    def __str__(self):
+        return f'{self.hotel}'
+
 
 class HotelHygiene(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     hygiene_title = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return f'{self.hotel} {self.hygiene_title}'
 
 
 class HotelContact(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     hotel_contact = PhoneNumberField(unique=True)
 
+    def __str__(self):
+        return f'{self.hotel} {self.hotel_contact}'
+
 
 class FavoriteHotel(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.hotel} {self.favorite}'
 
     class Meta:
         unique_together = ('hotel', 'favorite')
@@ -174,10 +216,16 @@ class ReviewHotel(AbstractReview):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.hotel} {self.user}'
+
 
 class ReviewHotelLike(models.Model):
     review_hotel = models.ForeignKey(ReviewHotel, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.review_hotel} {self.user}'
 
     class Meta:
         unique_together = ('review_hotel', 'user')
@@ -216,6 +264,9 @@ class Restaurant(models.Model):
     address = models.CharField(max_length=128, unique=True)
     phone = PhoneNumberField(unique=True)
 
+    def __str__(self):
+        return f'{self.place} {self.restaurant_name}'
+
     def clean(self):
         super().clean()
         if self.low_price > self.high_price:
@@ -226,11 +277,17 @@ class RestaurantImage(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     restaurant_image = models.ImageField(upload_to='restaurant_images/')
 
+    def __str__(self):
+        return f'{self.restaurant}'
+
 
 class FavoriteRestaurant(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.restaurant} {self.favorite}'
 
     class Meta:
         unique_together = ('restaurant', 'favorite')
@@ -244,10 +301,16 @@ class ReviewRestaurant(AbstractReview):
     price_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     atmosphere_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
 
+    def __str__(self):
+        return f'{self.restaurant} {self.user}'
+
 
 class ReviewRestaurantLike(models.Model):
     restaurant = models.ForeignKey(ReviewRestaurant, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.restaurant} {self.user}'
 
     class Meta:
         unique_together = ('restaurant', 'user')
@@ -255,6 +318,9 @@ class ReviewRestaurantLike(models.Model):
 
 class EventType(models.Model):
     event_type = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return f'{self.event_type}'
 
 
 class Event(models.Model):
@@ -266,6 +332,9 @@ class Event(models.Model):
     date = models.DateField()
     ticket = models.BooleanField(default=True)
     address = models.CharField(max_length=128)
+
+    def __str__(self):
+        return f'{self.place} {self.event_type}'
 
 
 class Attraction(models.Model):
@@ -280,15 +349,24 @@ class Attraction(models.Model):
     image3 = models.ImageField(upload_to='attraction_images/')
     image4 = models.ImageField(upload_to='attraction_images/')
 
+    def __str__(self):
+        return f'{self.place} {self.title}'
+
 
 class ReviewAttraction(AbstractReview):
     attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.attraction} {self.user}'
+
 
 class ReviewAttractionLike(models.Model):
     attraction = models.ForeignKey(ReviewAttraction, on_delete=models.CASCADE)
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.attraction} {self.user}'
 
     class Meta:
         unique_together = ('attraction', 'user')
@@ -298,6 +376,9 @@ class FavoriteAttraction(models.Model):
     attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE)
     favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.attraction} {self.favorite}'
 
     class Meta:
         unique_together = ('attraction', 'favorite')
@@ -315,3 +396,6 @@ class Culture(models.Model):
     culture_name = models.CharField(max_length=64, unique=True)
     image = models.ImageField(upload_to='culture_images/')
     description = models.TextField()
+
+    def __str__(self):
+        return f'{self.culture_variety} {self.culture_name}'
