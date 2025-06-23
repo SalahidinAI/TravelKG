@@ -8,9 +8,11 @@ TEMPERATURE_CHOICES = (
     (i, str(i)) for i in range(-50, 50)
 )
 
-
 class Country(models.Model):
     country_name = models.CharField(max_length=64, unique=True)
+
+    def __str__(self):
+        return self.country_name
 
 
 class City(models.Model):
@@ -41,6 +43,8 @@ class Region(models.Model):
     description = models.TextField()
     temperature = models.PositiveSmallIntegerField(choices=TEMPERATURE_CHOICES, null=True, blank=True)
 
+    def __str__(self):
+        return self.region_name
 
 class RegionMeal(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
@@ -56,7 +60,7 @@ class Place(models.Model):
     place_name = models.CharField(max_length=64, unique=True)
     place_image = models.ImageField(upload_to='place_images/')
     description = models.TextField()
-    temperature = models.PositiveSmallIntegerField(choices=TEMPERATURE_CHOICES)
+    temperature = models.PositiveSmallIntegerField(choices=TEMPERATURE_CHOICES, null=True, blank=True)
 
 
 # class PlaceMap(models.Model):
@@ -175,13 +179,21 @@ class ReviewHotelLike(models.Model):
 class MealType(models.Model):
     meal_type = models.CharField(max_length=32, unique=True)
 
+    def __str__(self):
+        return self.meal_type
 
 class SpecializedMenu(models.Model):
     specialized_menu = models.CharField(max_length=64, unique=True)
 
+    def __str__(self):
+        return self.specialized_menu
 
 class MealTime(models.Model):
     meal_time = models.CharField(max_length=32, unique=True)
+
+    def __str__(self):
+        return self.meal_time
+
 
 
 # add restriction to prices
@@ -235,6 +247,7 @@ class EventType(models.Model):
 class Event(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='event_image/')
     title = models.CharField(max_length=64)
     description = models.TextField()
     date = models.DateField()
@@ -280,6 +293,8 @@ class FavoriteAttraction(models.Model):
 class CultureVariety(models.Model):
     culture_variety_name = models.CharField(max_length=64, unique=True)
 
+    def __str__(self):
+        return self.culture_variety_name
 
 class Culture(models.Model):
     culture_variety = models.ForeignKey(CultureVariety, on_delete=models.CASCADE)
