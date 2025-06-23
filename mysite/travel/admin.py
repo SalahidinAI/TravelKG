@@ -50,14 +50,29 @@ class PlaceAdmin(TranslationAdmin, GeneralMedia):
     inlines = [AttractionInline, EventInline]
 
 
+class HotelHygieneInline(admin.TabularInline, TranslationInlineModelAdmin):
+    model = HotelHygiene
+    extra = 1
+
+
+class HotelContactInline(admin.TabularInline):
+    model = HotelContact
+    extra = 1
+
+
+class HotelImageInline(admin.TabularInline):
+    model = HotelImage
+    extra = 1
+
+
 @admin.register(Hotel)
 class HotelAdmin(TranslationAdmin, GeneralMedia):
-    pass
+    inlines = [HotelImageInline, HotelContactInline, HotelHygieneInline]
 
 
-@admin.register(HotelHygiene)
-class HotelHygieneAdmin(TranslationAdmin, GeneralMedia):
-    pass
+# @admin.register(HotelHygiene)
+# class HotelHygieneAdmin(TranslationAdmin, GeneralMedia):
+#     pass
 
 
 @admin.register(MealType)
@@ -75,9 +90,14 @@ class MealTimeAdmin(TranslationAdmin, GeneralMedia):
     pass
 
 
+class RestaurantImageInline(admin.TabularInline):
+    model = RestaurantImage
+    extra = 1
+
+
 @admin.register(Restaurant)
 class RestaurantAdmin(TranslationAdmin, GeneralMedia):
-    pass
+    inlines = [RestaurantImageInline]
 
 
 @admin.register(EventType)
@@ -163,7 +183,6 @@ admin.site.register(ReviewAttraction, ReviewAttractionAdmin)
 
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(UserProfile)
-admin.site.register(AbstractReview)
-admin.site.register(HotelImage)
-admin.site.register(HotelContact)
-admin.site.register(RestaurantImage)
+# admin.site.register(HotelImage)
+# admin.site.register(HotelContact)
+# admin.site.register(RestaurantImage)

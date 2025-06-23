@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+*lime/__pycache__/
+# Виртуальное окружение
+venv/
+.venv/
+env/
+ENV/
+
+# PyCharm
+.idea/
+
+# Временные файлы Git
+FETCH_HEAD
+#db.sqlite3
+*migrations
