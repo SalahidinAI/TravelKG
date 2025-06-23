@@ -18,9 +18,9 @@ class UserProfileAPIView(generics.ListAPIView):
     serializer_class = UserProfileSerializer
 
 
-class RegionAPIView(generics.ListAPIView):
+class HomeRegionAPIView(generics.ListAPIView):
     queryset = Region.objects.all()
-    serializer_class = RegionSerializer
+    serializer_class = RegionHomeSerializer
 
 
 class RegionMealAPIView(generics.ListAPIView):
@@ -28,9 +28,11 @@ class RegionMealAPIView(generics.ListAPIView):
     serializer_class = RegionMealSerializer
 
 
-class PlaceAPIView(generics.ListAPIView):
-    queryset = Place.objects.all()
-    serializer_class = PlaceSerializer
+class HomePlaceAPIView(generics.ListAPIView):
+    serializer_class = PlaceHomeSerializer
+
+    def get_queryset(self):
+        return Place.objects.filter(place_name='Bishkek')
 
 
 class AbstractReviewAPIView(generics.ListAPIView):
@@ -118,9 +120,9 @@ class EventAPIView(generics.ListAPIView):
     serializer_class = EventSerializer
 
 
-class AttractionAPIView(generics.ListAPIView):
+class HomeAttractionAPIView(generics.ListAPIView):
     queryset = Attraction.objects.all()
-    serializer_class = AttractionSerializer
+    serializer_class = AttractionHomeSerializer
 
 
 class CultureVarietyAPIView(generics.ListAPIView):
@@ -128,6 +130,8 @@ class CultureVarietyAPIView(generics.ListAPIView):
     serializer_class = CultureVarietySerializer
 
 
-class CultureAPIView(generics.ListAPIView):
-    queryset = Culture.objects.all()
-    serializer_class = CultureSerializer
+class HomeCultureAPIView(generics.ListAPIView):
+    serializer_class = CultureHomeSerializer
+
+    def get_queryset(self):
+        return Culture.objects.filter(culture_variety__culture_variety_name='Home page')

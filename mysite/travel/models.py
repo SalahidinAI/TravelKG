@@ -337,6 +337,7 @@ class Event(models.Model):
         return f'{self.place} {self.event_type}'
 
 
+# def review quantity / avg review
 class Attraction(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE)
     title = models.CharField(max_length=128, unique=True)

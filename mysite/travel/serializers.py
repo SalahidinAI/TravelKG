@@ -37,6 +37,12 @@ class RegionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class RegionHomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = ['id', 'region_name', 'region_image']
+
+
 class RegionMealSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegionMeal
@@ -47,6 +53,12 @@ class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = '__all__'
+
+
+class PlaceHomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Place
+        fields = ['id', 'place_name', 'place_image', 'description']
 
 
 class AbstractReviewSerializer(serializers.ModelSerializer):
@@ -187,6 +199,12 @@ class AttractionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AttractionHomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attraction
+        fields = ['id', 'title', 'description', 'image1']
+
+
 class ReviewAttractionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewAttraction
@@ -215,3 +233,9 @@ class CultureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Culture
         fields = '__all__'
+
+
+class CultureHomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Culture
+        fields = ['id', 'culture_name', 'image', 'description']
