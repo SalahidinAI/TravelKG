@@ -86,15 +86,20 @@ class Place(models.Model):
 # add filter to review
 class AbstractReview(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
-    service_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
+    service_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)], null=True, blank=True)
     created_date = models.DateField(auto_now_add=True)
-    photo1 = models.ImageField(upload_to='review_photos/')
-    photo2 = models.ImageField(upload_to='review_photos/')
-    photo3 = models.ImageField(upload_to='review_photos/')
-    text = models.TextField()
+    photo1 = models.ImageField(upload_to='review_photos/', null=True, blank=True)
+    photo2 = models.ImageField(upload_to='review_photos/', null=True, blank=True)
+    photo3 = models.ImageField(upload_to='review_photos/', null=True, blank=True)
+    text = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.service_score}'
+
+    def clean(self):
+        super().clean()
+        if not self.text or not self.service_score:
+            raise ValidationError('Both text and service_score can not be null')
 
 
 class ReviewPlace(AbstractReview):
