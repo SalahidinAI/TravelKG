@@ -5,6 +5,8 @@ django-modeltranslation==0.19.15
 django-phonenumber-field==8.1.0
 djangorestframework==3.16.0
 drf-yasg==1.21.10
+geographiclib==2.0
+geopy==2.4.1
 inflection==0.5.1
 packaging==25.0
 phonenumbers==9.0.7
