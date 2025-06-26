@@ -1,6 +1,9 @@
 from rest_framework import generics, viewsets
 from .models import *
 from .serializers import *
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class CountryAPIView(generics.ListAPIView):
@@ -151,17 +154,17 @@ class HomeCultureAPIView(generics.ListAPIView):
         return Culture.objects.filter(culture_variety__culture_variety_name='Home page')
 
 
-# @api_view(['POST'])
-# def toggle_book_like(request, book_id):
-#     try:
-#         book = Book.objects.get(id=book_id)
-#     except Book.DoesNotExist:
-#         return Response({'detail': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
-#
-#     like, created = Like.objects.get_or_create(user=request.user, book=book)
-#
-#     if not created:
-#         like.delete()
-#         return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
-#
-#     return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)
+@api_view(['POST'])
+def toggle_review_attraction_like(request, review_attraction_id):
+    try:
+        attraction = ReviewAttraction.objects.get(id=review_attraction_id)
+    except ReviewAttraction.DoesNotExist:
+        return Response({'detail': 'Attraction not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    like, created = ReviewAttractionLike.objects.get_or_create(user=request.user, attraction=attraction)
+
+    if not created:
+        like.delete()
+        return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)
