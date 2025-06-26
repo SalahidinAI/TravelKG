@@ -4,6 +4,10 @@ from .serializers import *
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
+from .coordinates import locations
+from geopy.distance import geodesic
+from drf_yasg.utils import swagger_auto_schema
 
 
 class CountryAPIView(generics.ListAPIView):
@@ -155,30 +159,70 @@ class HomeCultureAPIView(generics.ListAPIView):
 
 
 @api_view(['POST'])
+def toggle_review_place_like(request, review_place_id):
+    try:
+        review_place = ReviewPlace.objects.get(id=review_place_id)
+    except ReviewPlace.DoesNotExist:
+        return Response({'detail': 'Place review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    like, created = ReviewPlaceLike.objects.get_or_create(user=request.user, review_place=review_place)
+
+    if not created:
+        like.delete()
+        return Response({'detail': 'Like is deleted'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'detail': 'Like is created'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def toggle_review_hotel_like(request, review_hotel_id):
+    try:
+        review_hotel = ReviewHotel.objects.get(id=review_hotel_id)
+    except ReviewHotel.DoesNotExist:
+        return Response({'detail': 'Hotel review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    like, created = ReviewHotelLike.objects.get_or_create(user=request.user, review_hotel=review_hotel)
+
+    if not created:
+        like.delete()
+        return Response({'detail': 'Like is deleted'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'detail': 'Like is created'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+def toggle_review_restaurant_like(request, review_restaurant_id):
+    try:
+        restaurant = ReviewRestaurant.objects.get(id=review_restaurant_id)
+    except ReviewRestaurant.DoesNotExist:
+        return Response({'detail': 'Restaurant review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    like, created = ReviewRestaurantLike.objects.get_or_create(user=request.user, restaurant=restaurant)
+
+    if not created:
+        like.delete()
+        return Response({'detail': 'Like is deleted'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'detail': 'Like is created'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
 def toggle_review_attraction_like(request, review_attraction_id):
     try:
         attraction = ReviewAttraction.objects.get(id=review_attraction_id)
     except ReviewAttraction.DoesNotExist:
-        return Response({'detail': 'Attraction not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Attraction review not found'}, status=status.HTTP_404_NOT_FOUND)
 
     like, created = ReviewAttractionLike.objects.get_or_create(user=request.user, attraction=attraction)
 
     if not created:
         like.delete()
-        return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Like is deleted'}, status=status.HTTP_404_NOT_FOUND)
 
-    return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)
+    return Response({'detail': 'Like is created'}, status=status.HTTP_201_CREATED)
 
 
 # travel/views.py
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import TravelRequestSerializer
-from .coordinates import locations
-from geopy.distance import geodesic
-from drf_yasg.utils import swagger_auto_schema  # 👈
 
 class TravelDistanceAPIView(APIView):
     @swagger_auto_schema(request_body=TravelRequestSerializer)  # 👈 ЭТО ВАЖНО
