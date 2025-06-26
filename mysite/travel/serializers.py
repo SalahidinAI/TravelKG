@@ -37,22 +37,34 @@ class RegionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class RegionHomeSerializer(serializers.ModelSerializer):
+class RegionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
         fields = ['id', 'region_name', 'region_image']
 
 
+class RegionDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = ['id', 'region_name', 'region_image', 'description', 'temperature']
+
+
 class RegionMealSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegionMeal
-        fields = '__all__'
+        fields = ['id', 'meal_name', 'description', 'meal_image1', 'meal_image2', 'meal_image3']
 
 
 class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = '__all__'
+
+
+class RegionPlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Place
+        fields = ['id', 'place_name', 'place_image']
 
 
 class PlaceHomeSerializer(serializers.ModelSerializer):
@@ -200,9 +212,18 @@ class AttractionSerializer(serializers.ModelSerializer):
 
 
 class AttractionHomeSerializer(serializers.ModelSerializer):
+    total_reviews = serializers.SerializerMethodField()
+    avg_review = serializers.SerializerMethodField()
+
     class Meta:
         model = Attraction
-        fields = ['id', 'title', 'description', 'image1']
+        fields = ['id', 'title', 'description', 'image1', 'total_reviews', 'avg_review']
+
+    def get_total_reviews(self, obj):
+        return obj.get_total_reviews()
+
+    def get_avg_review(self, obj):
+        return obj.get_avg_review()
 
 
 class ReviewAttractionSerializer(serializers.ModelSerializer):

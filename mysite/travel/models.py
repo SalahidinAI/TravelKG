@@ -98,7 +98,7 @@ class AbstractReview(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.text or not self.service_score:
+        if not self.text and not self.service_score:
             raise ValidationError('Both text and service_score can not be null')
 
 
@@ -358,9 +358,19 @@ class Attraction(models.Model):
     def __str__(self):
         return f'{self.place} {self.title}'
 
+    def get_total_reviews(self):
+        total_reviews = self.reviews.all()
+        return total_reviews.count()
+
+    def get_avg_review(self):
+        all_reviews = self.reviews.all()
+        if all_reviews.exists():
+            return sum([i.service_score for i in all_reviews if i.service_score]) / all_reviews.count()
+        return 0
+
 
 class ReviewAttraction(AbstractReview):
-    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE)
+    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE, related_name='reviews')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):

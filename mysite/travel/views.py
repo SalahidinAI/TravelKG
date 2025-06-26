@@ -18,14 +18,28 @@ class UserProfileAPIView(generics.ListAPIView):
     serializer_class = UserProfileSerializer
 
 
-class HomeRegionAPIView(generics.ListAPIView):
+class RegionListAPIView(generics.ListAPIView):
     queryset = Region.objects.all()
-    serializer_class = RegionHomeSerializer
+    serializer_class = RegionListSerializer
+
+
+class RegionDetailAPIView(generics.RetrieveAPIView):
+    queryset = Region.objects.all()
+    serializer_class = RegionDetailSerializer
 
 
 class RegionMealAPIView(generics.ListAPIView):
     queryset = RegionMeal.objects.all()
     serializer_class = RegionMealSerializer
+
+
+class RegionPlaceListAPIView(generics.ListAPIView):
+    queryset = Place.objects.all()
+    serializer_class = RegionPlaceSerializer
+
+    def get_queryset(self):
+        region_id = self.kwargs.get('region_id')
+        return Place.objects.filter(region=region_id)
 
 
 class HomePlaceAPIView(generics.ListAPIView):
@@ -135,3 +149,19 @@ class HomeCultureAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Culture.objects.filter(culture_variety__culture_variety_name='Home page')
+
+
+# @api_view(['POST'])
+# def toggle_book_like(request, book_id):
+#     try:
+#         book = Book.objects.get(id=book_id)
+#     except Book.DoesNotExist:
+#         return Response({'detail': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
+#
+#     like, created = Like.objects.get_or_create(user=request.user, book=book)
+#
+#     if not created:
+#         like.delete()
+#         return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
+#
+#     return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)

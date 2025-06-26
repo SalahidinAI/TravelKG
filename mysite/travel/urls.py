@@ -6,5 +6,9 @@ urlpatterns = [
     path('home/place/', HomePlaceAPIView.as_view(), name='home_place_list'),
     path('home/attraction/', HomeAttractionAPIView.as_view(), name='home_attraction_list'),
     path('home/culture/', HomeCultureAPIView.as_view(), name='home_culture_list'),
-    path('home/region/', HomeRegionAPIView.as_view(), name='home_region_list'),
+    path('region/', RegionListAPIView.as_view(), name='region_list'),
+
+    path('region/<int:pk>/', RegionDetailAPIView.as_view(), name='region_detail'),
+    path('region/<int:pk>/meal/', RegionMealAPIView.as_view(), name='region_detail_meal'),
+    path('region/<int:region_id>/place/', RegionPlaceListAPIView.as_view(), name='region_detail_place_list'),
 ]
