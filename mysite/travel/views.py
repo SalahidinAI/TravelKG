@@ -168,3 +168,44 @@ def toggle_review_attraction_like(request, review_attraction_id):
         return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
 
     return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)
+
+
+# travel/views.py
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import TravelRequestSerializer
+from .coordinates import locations
+from geopy.distance import geodesic
+from drf_yasg.utils import swagger_auto_schema  # 👈
+
+class TravelDistanceAPIView(APIView):
+    @swagger_auto_schema(request_body=TravelRequestSerializer)  # 👈 ЭТО ВАЖНО
+    def post(self, request):
+        serializer = TravelRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            from_city = serializer.validated_data['from_city']
+            to_city = serializer.validated_data['to_city']
+
+            coord_from = locations.get(from_city)
+            coord_to = locations.get(to_city)
+
+            if not coord_from or not coord_to:
+                return Response({"error": "Unknown city name"}, status=status.HTTP_400_BAD_REQUEST)
+
+            distance = geodesic(coord_from, coord_to).km
+
+            return Response({
+                "from": from_city,
+                "to": to_city,
+                "distance_km": round(distance, 2),
+                "time": {
+                    "walking_hours": round(distance / 5, 2),
+                    "driving_hours": round(distance / 70, 2),
+                    "train_hours": round(distance / 80, 2),
+                    "plane_hours": round(distance / 600, 2)
+                }
+            })
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

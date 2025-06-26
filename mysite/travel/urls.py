@@ -5,6 +5,8 @@ from .views import *
 urlpatterns = [
     path('attraction_review_like/<int:review_attraction_id>/', toggle_review_attraction_like, name='review_attraction_like'),
 
+    path("distance/", TravelDistanceAPIView.as_view(), name="distance"),
+
     path('home/place/', HomePlaceAPIView.as_view(), name='home_place_list'),
     path('home/attraction/', HomeAttractionAPIView.as_view(), name='home_attraction_list'),
     path('home/culture/', HomeCultureAPIView.as_view(), name='home_culture_list'),
