@@ -85,4 +85,3 @@ class CultureTranslationOptions(TranslationOptions):
 # @register()
 # class TranslationOptions(TranslationOptions):
 #     fields = ('',)
-

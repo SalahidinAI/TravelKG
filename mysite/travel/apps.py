@@ -7,3 +7,4 @@ class TravelConfig(AppConfig):
 
     def ready(self):
         from travel import signals  # Инициализация сигналов
+

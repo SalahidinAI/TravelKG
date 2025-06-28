@@ -194,3 +194,4 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "x-requested-with",
 ]
+
