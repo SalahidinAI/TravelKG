@@ -149,11 +149,6 @@ class VerifyResetCodeSerializer(serializers.Serializer):
 #         return value
 
 
-class TravelRequestSerializer(serializers.Serializer):
-    from_city = serializers.CharField()
-    to_city = serializers.CharField()
-
-
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
