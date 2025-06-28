@@ -6,8 +6,6 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from travel.views import verify_reset_code
 
 
-
-
 urlpatterns = [
     path('home/place/', HomePlaceAPIView.as_view(), name='home_place_list'),
     path('home/attraction/', HomeAttractionAPIView.as_view(), name='home_attraction_list'),

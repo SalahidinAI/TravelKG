@@ -15,5 +15,3 @@ ENV/
 FETCH_HEAD
 mysite/db.sqlite3
 *migrations
-
-
