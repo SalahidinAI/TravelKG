@@ -13,8 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-from decouple import config  # pip install python-decouple
-from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,10 +46,6 @@ INSTALLED_APPS = [
     'phonenumber_field',
     'corsheaders',
     'drf_yasg',
-    'rest_framework_simplejwt',
-    'django_rest_passwordreset',
-    'rest_framework_simplejwt.token_blacklist',
-
 ]
 
 MIDDLEWARE = [
@@ -154,24 +148,6 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'travel.UserProfile'
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=300),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
-
-
-}
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'kadyroverjan2006@gmail.com'          # твой Gmail
-EMAIL_HOST_PASSWORD = 'vaol vutw kdfn lcsc'  # сгенерированный пароль для приложений
-
 
 CORS_ALLOW_ALL_ORIGINS = True
 
