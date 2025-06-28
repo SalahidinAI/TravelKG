@@ -13,7 +13,7 @@ ENV/
 
 # Временные файлы Git
 FETCH_HEAD
-mysite/db.sqlite3
-*migrations
+#mysite/db.sqlite3
+#*migrations
 
 
