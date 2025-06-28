@@ -396,3 +396,4 @@ class CultureHomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Culture
         fields = ['id', 'culture_name', 'image', 'description']
+
