@@ -4,6 +4,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+
 TEMPERATURE_CHOICES = [
     (i, str(i)) for i in range(-50, 50)
 ]

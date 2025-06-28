@@ -19,4 +19,3 @@ urlpatterns = [
     path('region/<int:pk>/meal/', RegionMealAPIView.as_view(), name='region_detail_meal'),
     path('region/<int:region_id>/place/', RegionPlaceListAPIView.as_view(), name='region_detail_place_list'),
 ]
-
