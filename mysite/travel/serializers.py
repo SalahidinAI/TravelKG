@@ -1,6 +1,142 @@
 from rest_framework import serializers
 from django.utils import timezone
 from .models import *
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from datetime import timedelta
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.core.mail import send_mail
+from django_rest_passwordreset.models import ResetPasswordToken
+from phonenumber_field.serializerfields import PhoneNumberField
+
+
+User = get_user_model()
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    confirm_password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'email', 'password', 'confirm_password',
+            'username', 'last_name', 'phone_number', 'birthday'
+        )
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True}
+        }
+
+    def validate(self, data):
+        if data.get('password') != data.get('confirm_password'):
+            raise serializers.ValidationError("Пароли не совпадают.")
+        return data
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Этот email уже зарегистрирован.")
+        return value
+
+    def validate_password(self, value):
+        if len(value) < 6:
+            raise serializers.ValidationError("Пароль должен быть не менее 6 символов.")
+        return value
+
+    def validate_birthday(self, value):
+        from datetime import date
+        if value > date.today():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем.")
+        return value
+
+    def validate_phone_number(self, value):
+        if value and User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("Этот номер уже используется.")
+        return value
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+
+class CustomLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Пользователь с таким email не найден")
+
+        if not user.check_password(password):
+            raise serializers.ValidationError("Неверный пароль")
+
+        if not user.is_active:
+            raise serializers.ValidationError("Пользователь не активен")
+
+        self.context['user'] = user
+        return data
+
+    def to_representation(self, instance):
+        user = self.context['user']
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'user': {
+                'username': user.username,
+                'email': user.email,
+            },
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+class VerifyResetCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    reset_code = serializers.IntegerField()
+    new_password = serializers.CharField(write_only=True, min_length=6)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        reset_code = data.get('reset_code')
+        new_password = data.get('new_password')
+        confirm_password = data.get('confirm_password')
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError("Пароли не совпадают.")
+
+        try:
+            token = ResetPasswordToken.objects.get(user__email=email, key=str(reset_code))
+        except ResetPasswordToken.DoesNotExist:
+            raise serializers.ValidationError("Неверный код сброса или email.")
+
+        data['user'] = token.user
+        data['token'] = token
+        return data
+
+    def save(self):
+        user = self.validated_data['user']
+        token = self.validated_data['token']
+        new_password = self.validated_data['new_password']
+
+        user.set_password(new_password)
+        user.save()
+
+        # Удаляем использованный токен
+        token.delete()
+
 
 # class UserProfileSerializer(serializers.ModelSerializer):
 #     class Meta:

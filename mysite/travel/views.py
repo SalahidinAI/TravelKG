@@ -1,6 +1,63 @@
 from rest_framework import generics, viewsets
 from .models import *
 from .serializers import *
+from rest_framework import status, viewsets, generics, permissions
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.db import IntegrityError
+from rest_framework.exceptions import ValidationError
+from rest_framework.views import APIView
+from django.contrib.auth import update_session_auth_hash
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import VerifyResetCodeSerializer
+
+class RegisterView(generics.CreateAPIView):
+    serializer_class = UserRegistrationSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CustomLoginView(generics.GenericAPIView):
+    serializer_class = CustomLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # <-- Это само вернёт 400 с деталями ошибок
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class LogoutView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            refresh_token = serializer.validated_data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response({'detail': 'Невалидный токен'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def verify_reset_code(request):
+    serializer = VerifyResetCodeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'Пароль успешно сброшен.'}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CountryAPIView(generics.ListAPIView):
