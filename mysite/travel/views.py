@@ -222,3 +222,4 @@ class HomeCultureAPIView(generics.ListAPIView):
 #         return Response({'detail': 'Like deleted'}, status=status.HTTP_404_NOT_FOUND)
 #
 #     return Response({'detail': 'Like created'}, status=status.HTTP_201_CREATED)
+
