@@ -181,7 +181,6 @@ admin.site.register(ReviewHotel, ReviewHotelAdmin)
 admin.site.register(ReviewRestaurant, ReviewRestaurantAdmin)
 admin.site.register(ReviewAttraction, ReviewAttractionAdmin)
 
-
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(UserProfile)
 # admin.site.register(HotelImage)

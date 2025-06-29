@@ -138,7 +138,6 @@ class VerifyResetCodeSerializer(serializers.Serializer):
         token.delete()
 
 
-
 # class UserProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = UserProfile

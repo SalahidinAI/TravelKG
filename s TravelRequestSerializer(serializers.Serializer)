@@ -1,0 +1,22 @@
+[33md0f4cd5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33md0f4cd5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m HEAD@{1}: pull: Merge made by the 'ort' strategy.
+[33m765f8ae[m HEAD@{2}: commit (merge): .
+[33m99fa434[m HEAD@{3}: commit (merge): ..
+[33m41509e4[m HEAD@{4}: commit (merge): True Erzhans code
+[33ma8888c2[m HEAD@{5}: commit (merge): True Erzhans code
+[33m0e50840[m HEAD@{6}: commit: ...
+[33m60044ab[m HEAD@{7}: commit: s
+[33mff2dfac[m HEAD@{8}: commit: s
+[33m987aec3[m HEAD@{9}: commit (merge): Merge branch 'master' of github.com:SalahidinAI/TravelKG
+[33m0f1f9c8[m HEAD@{10}: commit: from erzhan
+[33mac8c525[m HEAD@{11}: reset: moving to HEAD
+[33mac8c525[m HEAD@{12}: commit: from erzhan
+[33m551236a[m HEAD@{13}: pull origin master: Fast-forward
+[33m96635f4[m HEAD@{14}: pull origin master: Fast-forward
+[33m3f35423[m HEAD@{15}: pull origin master: Fast-forward
+[33mbabecc6[m HEAD@{16}: reset: moving to origin/master
+[33mbabecc6[m HEAD@{17}: reset: moving to origin/master
+[33mbabecc6[m HEAD@{18}: reset: moving to origin/master
+[33mbabecc6[m HEAD@{19}: commit: gg
+[33mf5cdb52[m HEAD@{20}: pull origin master: Fast-forward
+[33m462ccc0[m HEAD@{21}: clone: from github.com:SalahidinAI/TravelKG.git
