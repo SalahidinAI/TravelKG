@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics
 from django.utils import timezone
 from .models import *
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -11,6 +11,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django_rest_passwordreset.models import ResetPasswordToken
 from phonenumber_field.serializerfields import PhoneNumberField
+from datetime import date
 
 
 User = get_user_model()
@@ -137,6 +138,49 @@ class VerifyResetCodeSerializer(serializers.Serializer):
         # Удаляем использованный токен
         token.delete()
 
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = ['id', 'country_name']
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ['id', 'city_name']
+
+
+class UserProfileSimpleSerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+    city = CitySerializer()
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city']
+
+class UserProfileListSerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+    city = CitySerializer()
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city', 'profile_photo',
+                  'banner']
+
+class UserProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city', 'profile_photo',
+                  'banner', 'email', 'password', 'phone_number', 'birthday']
+
+    def validate_email(self, value):
+        user_id = self.instance.id if self.instance else None
+        if UserProfile.objects.exclude(id=user_id).filter(email=value).exists():
+            raise serializers.ValidationError("Этот email уже используется.")
+        return value
+
+    def validate_birthday(self, value):
+        if value > date.today():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем.")
+        return value
+
 
 # class UserProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -152,24 +196,6 @@ class VerifyResetCodeSerializer(serializers.Serializer):
 class TravelRequestSerializer(serializers.Serializer):
     from_city = serializers.CharField()
     to_city = serializers.CharField()
-
-
-class CountrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Country
-        fields = '__all__'
-
-
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = '__all__'
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = '__all__'
 
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -196,11 +222,146 @@ class RegionMealSerializer(serializers.ModelSerializer):
         fields = ['id', 'meal_name', 'description', 'meal_image1', 'meal_image2', 'meal_image3']
 
 
-class PlaceSerializer(serializers.ModelSerializer):
+
+class PlaceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
+        fields = ['id', 'place_name', 'place_image']
+
+class ReviewPlaceListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewPlace
+        fields = ['id', 'photo1', 'photo2', 'photo3', 'text', 'parent', 'place', 'user', 'created_date']
+
+class PlaceDetailSerializer(serializers.ModelSerializer):
+    review_place = ReviewPlaceListSerializer(many=True, read_only=True)
+    class Meta:
+        model = Place
+        fields = ['id', 'place_name', 'place_image', 'description', 'temperature', 'review_place']
+
+class EventTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventType
+        fields = ['id', 'event_type']
+
+class EventSerializer(serializers.ModelSerializer):
+    event_type = EventTypeSerializer()
+    place = PlaceDetailSerializer()
+    class Meta:
+        model = Event
+        fields = ['id', 'place', 'event_type', 'image', 'title', 'description', 'date', 'ticket', 'address']
+
+
+class AttractionListSerializer(serializers.ModelSerializer):
+    country = CountrySerializer(many=True)
+    class Meta:
+        model = Attraction
+        fields = ['id', 'place', 'image1', 'title', 'country']
+
+class ReviewAttractionListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewAttraction
         fields = '__all__'
 
+class AttractionDetailSerializer(serializers.ModelSerializer):
+    review_attraction = ReviewAttractionListSerializer(many=True, read_only=True)
+    class Meta:
+        model = Attraction
+        fields = ['id', 'title', 'description', 'low_price', 'high_price', 'image1', 'image2', 'image3', 'image4', 'review_attraction']
+
+class MealTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealType
+        fields = ['id', 'meal_type']
+
+class SpecializedMenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecializedMenu
+        fields = ['id', 'specialized_menu']
+
+class MealTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealTime
+        fields = ['id', 'meal_time']
+
+class RestaurantImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantImage
+        fields = ['id', 'restaurant_image']
+
+class RestaurantListSerializer(serializers.ModelSerializer):
+    restaurant_images = RestaurantImageSerializer(read_only=True, many=True)
+    place = PlaceDetailSerializer()
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'place', 'restaurant_images', 'restaurant_name', 'low_price', 'high_price']
+
+class ReviewRestaurantListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewRestaurant
+        fields = ['id', 'service_score', 'photo1', 'photo2', 'photo3', 'text', 'nutrition_score', 'price_score', 'atmosphere_score', 'parent', 'restaurant', 'user', 'created_date']
+
+class RestaurantDetailSerializer(serializers.ModelSerializer):
+    restaurant_images = RestaurantImageSerializer(read_only=True, many=True)
+    meal_type = MealTypeSerializer(many=True)
+    specialized_menu = SpecializedMenuSerializer(many=True)
+    meal_time = MealTimeSerializer(many=True)
+    review_restaurant = ReviewRestaurantListSerializer(read_only=True, many=True)
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'restaurant_images', 'restaurant_name', 'low_price', 'high_price', 'meal_type', 'specialized_menu', 'meal_time', 'address', 'phone', 'review_restaurant']
+
+
+class HotelImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelImage
+        fields = ['id', 'hotel_image']
+
+class HotelHygieneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelHygiene
+        fields = ['id', 'hygiene_title']
+
+class HotelContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelContact
+        fields = ['id', 'hotel_contact']
+
+
+class HotelListSerializer(serializers.ModelSerializer):
+    hotel_images = HotelImageSerializer(read_only=True, many=True)
+    place = PlaceDetailSerializer()
+    class Meta:
+        model = Hotel
+        fields = ['id', 'place', 'hotel_images', 'hotel_name']
+
+
+class ReviewHotelListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewHotel
+        fields = ['id', 'service_score', 'photo1', 'photo2', 'photo3', 'text', 'parent', 'hotel', 'user', 'created_date']
+
+
+class HotelDetailSerializer(serializers.ModelSerializer):
+    hotel_images = HotelImageSerializer(read_only=True, many=True)
+    hotel_hygiene = HotelHygieneSerializer(read_only=True, many=True)
+    owner = UserProfileSimpleSerializer()
+    hotel_contacts = HotelContactSerializer(read_only=True, many=True)
+    review_hotel = ReviewHotelListSerializer(many=True, read_only=True)
+    class Meta:
+        model = Hotel
+        fields = ['id', 'owner', 'hotel_images', 'hotel_name', 'low_price', 'high_price', 'bedrooms', 'bathrooms', 'cars', 'bikes', 'pets', 'address', 'description', 'kitchen', 'air', 'washer', 'tv', 'wifi', 'balcony', 'parking', 'hair_dryer', 'towel', 'iron', 'hotel_hygiene', 'hotel_contacts', 'review_hotel']
+
+class CultureVarietySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CultureVariety
+        fields = ['id', 'culture_variety_name']
+
+class CultureSerializer(serializers.ModelSerializer):
+    culture_variety = CultureVarietySerializer()
+    class Meta:
+        model = Culture
+        fields = ['id', 'culture_variety', 'culture_name', 'image', 'description']
 
 class RegionPlaceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -243,40 +404,9 @@ class FavoritePlaceSerializer(serializers.ModelSerializer):
         model = FavoritePlace
         fields = '__all__'
 
-
-class HotelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Hotel
-        fields = '__all__'
-
-
-class HotelImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelImage
-        fields = '__all__'
-
-
-class HotelHygieneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelHygiene
-        fields = '__all__'
-
-
-class HotelContactSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelContact
-        fields = '__all__'
-
-
 class FavoriteHotelSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteHotel
-        fields = '__all__'
-
-
-class ReviewHotelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReviewHotel
         fields = '__all__'
 
 
@@ -284,37 +414,6 @@ class ReviewHotelLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewHotelLike
         fields = '__all__'
-
-
-class MealTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MealType
-        fields = '__all__'
-
-
-class SpecializedMenuSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SpecializedMenu
-        fields = '__all__'
-
-
-class MealTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MealTime
-        fields = '__all__'
-
-
-class RestaurantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Restaurant
-        fields = '__all__'
-
-
-class RestaurantImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RestaurantImage
-        fields = '__all__'
-
 
 class FavoriteRestaurantSerializer(serializers.ModelSerializer):
     class Meta:
@@ -331,24 +430,6 @@ class ReviewRestaurantSerializer(serializers.ModelSerializer):
 class ReviewRestaurantLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewRestaurantLike
-        fields = '__all__'
-
-
-class EventTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventType
-        fields = '__all__'
-
-
-class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = '__all__'
-
-
-class AttractionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Attraction
         fields = '__all__'
 
 
@@ -372,28 +453,21 @@ class ReviewAttractionSerializer(serializers.ModelSerializer):
         model = ReviewAttraction
         fields = '__all__'
 
-
 class ReviewAttractionLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewAttractionLike
         fields = '__all__'
 
 
+class ReviewHotelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewHotel
+        fields = '__all__'
+
+
 class FavoriteAttractionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteAttraction
-        fields = '__all__'
-
-
-class CultureVarietySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CultureVariety
-        fields = '__all__'
-
-
-class CultureSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Culture
         fields = '__all__'
 
 

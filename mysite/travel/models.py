@@ -131,7 +131,7 @@ class AbstractReview(models.Model):
 
 
 class ReviewPlace(AbstractReview):
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='review_place')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -209,7 +209,7 @@ class Hotel(models.Model):
 
 
 class HotelImage(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_images')
     hotel_image = models.ImageField(upload_to='hotel_images/')
 
     def __str__(self):
@@ -217,7 +217,7 @@ class HotelImage(models.Model):
 
 
 class HotelHygiene(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_hygiene')
     hygiene_title = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
@@ -225,7 +225,7 @@ class HotelHygiene(models.Model):
 
 
 class HotelContact(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_contacts')
     hotel_contact = PhoneNumberField(unique=True)
 
     def __str__(self):
@@ -246,7 +246,7 @@ class FavoriteHotel(models.Model):
 
 # add filter to review
 class ReviewHotel(AbstractReview):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='review_hotel')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -307,7 +307,7 @@ class Restaurant(models.Model):
 
 
 class RestaurantImage(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='restaurant_images')
     restaurant_image = models.ImageField(upload_to='restaurant_images/')
 
     def __str__(self):
@@ -328,7 +328,7 @@ class FavoriteRestaurant(models.Model):
 
 # check,p Are scores working well?
 class ReviewRestaurant(AbstractReview):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='review_restaurant')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     nutrition_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     price_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
@@ -398,7 +398,7 @@ class Attraction(models.Model):
 
 
 class ReviewAttraction(AbstractReview):
-    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE, related_name='reviews')
+    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE, related_name='review_attraction')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from rest_framework import generics, viewsets
+from rest_framework import generics, viewsets, permissions
 from .models import *
 from .serializers import *
 from rest_framework import status, viewsets, generics, permissions
@@ -26,6 +26,7 @@ from rest_framework.views import APIView
 from .coordinates import locations
 from geopy.distance import geodesic
 from drf_yasg.utils import swagger_auto_schema
+from .permissions import UserEdit
 
 
 class RegisterView(generics.CreateAPIView):
@@ -71,19 +72,18 @@ def verify_reset_code(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CountryAPIView(generics.ListAPIView):
-    queryset = Country.objects.all()
-    serializer_class = CountrySerializer
-
-
-class CityAPIView(generics.ListAPIView):
-    queryset = City.objects.all()
-    serializer_class = CitySerializer
-
-
-class UserProfileAPIView(generics.ListAPIView):
+class UserProfileListAPIView(generics.ListAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
+    serializer_class = UserProfileListSerializer
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(id=self.request.user.id)
+
+class UserProfileEditAPIView(generics.RetrieveUpdateAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileEditSerializer
+    permission_classes = [permissions.IsAuthenticated, UserEdit]
+
 
 
 class RegionListAPIView(generics.ListAPIView):
@@ -122,9 +122,23 @@ class AbstractReviewAPIView(generics.ListAPIView):
     serializer_class = AbstractReviewSerializer
 
 
-class ReviewPlaceAPIView(generics.ListAPIView):
+class ReviewPlaceCreateAPIView(generics.CreateAPIView):
+    serializer_class = ReviewPlaceSerializer
+    permissions_classes = [permissions.IsAuthenticated]
+
+class ReviewPlaceDeleteAPIView(generics.DestroyAPIView):
     queryset = ReviewPlace.objects.all()
     serializer_class = ReviewPlaceSerializer
+    permissions_classes = [permissions.IsAuthenticated, UserEdit]
+
+
+class ReviewPlaceListAPIView(generics.ListAPIView):
+    queryset = ReviewPlace.objects.all()
+    serializer_class = ReviewPlaceListSerializer
+
+    def get_queryset(self):
+        place_id = self.kwargs.get('place_id')
+        return ReviewPlace.objects.filter(place=place_id)
 
 
 class ReviewPlaceLikeAPIView(generics.ListAPIView):
@@ -141,75 +155,105 @@ class FavoritePlaceAPIView(generics.ListAPIView):
     queryset = FavoritePlace.objects.all()
     serializer_class = FavoritePlaceSerializer
 
+class PlaceListAPIView(generics.ListAPIView):
+    queryset = Place.objects.all()
+    serializer_class = PlaceListSerializer
 
-class HotelAPIView(generics.ListAPIView):
-    queryset = Hotel.objects.all()
-    serializer_class = HotelSerializer
-
-
-class HotelImageAPIView(generics.ListAPIView):
-    queryset = HotelImage.objects.all()
-    serializer_class = HotelImageSerializer
-
-
-class HotelHygieneAPIView(generics.ListAPIView):
-    queryset = HotelHygiene.objects.all()
-    serializer_class = HotelHygieneSerializer
-
-
-class ReviewHotelAPIView(generics.ListAPIView):
-    queryset = ReviewHotel.objects.all()
-    serializer_class = ReviewHotelSerializer
-
-
-class MealTypeAPIView(generics.ListAPIView):
-    queryset = MealType.objects.all()
-    serializer_class = MealTypeSerializer
-
-
-class SpecializedMenuAPIView(generics.ListAPIView):
-    queryset = SpecializedMenu.objects.all()
-    serializer_class = SpecializedMenuSerializer
-
-
-class MealTimeAPIView(generics.ListAPIView):
-    queryset = MealTime.objects.all()
-    serializer_class = MealTimeSerializer
-
-
-class RestaurantAPIView(generics.ListAPIView):
-    queryset = Restaurant.objects.all()
-    serializer_class = RestaurantSerializer
-
-
-class RestaurantImageAPIView(generics.ListAPIView):
-    queryset = RestaurantImage.objects.all()
-    serializer_class = RestaurantImageSerializer
-
-
-class ReviewRestaurantAPIView(generics.ListAPIView):
-    queryset = ReviewRestaurant.objects.all()
-    serializer_class = ReviewRestaurantSerializer
-
-
-class EventTypeAPIView(generics.ListAPIView):
-    queryset = EventType.objects.all()
-    serializer_class = EventTypeSerializer
-
+class PlaceDetailAPIView(generics.RetrieveAPIView):
+    queryset = Place.objects.all()
+    serializer_class = PlaceDetailSerializer
 
 class EventAPIView(generics.ListAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
+class AttractionListAPIView(generics.ListAPIView):
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionListSerializer
+
+class AttractionDetailAPIView(generics.RetrieveAPIView):
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionDetailSerializer
+
+class RestaurantListAPIView(generics.ListAPIView):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantListSerializer
+
+class RestaurantDetailAPIView(generics.RetrieveAPIView):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantDetailSerializer
+
+class HotelListAPIView(generics.ListAPIView):
+    queryset = Hotel.objects.all()
+    serializer_class = HotelListSerializer
+
+class HotelDetailAPIView(generics.RetrieveAPIView):
+    queryset = Hotel.objects.all()
+    serializer_class = HotelDetailSerializer
+
+class CultureAPIView(generics.ListAPIView):
+    queryset = Culture.objects.all()
+    serializer_class = CultureSerializer
+
+class ReviewHotelCreateAPIView(generics.CreateAPIView):
+    serializer_class = ReviewHotelSerializer
+    permissions_classes = [permissions.IsAuthenticated]
+
+class ReviewHotelDeleteAPIView(generics.DestroyAPIView):
+    queryset = ReviewHotel.objects.all()
+    serializer_class = ReviewHotelSerializer
+    permissions_classes = [permissions.IsAuthenticated, UserEdit]
+
+class ReviewHotelListAPIView(generics.ListAPIView):
+    queryset = ReviewHotel.objects.all()
+    serializer_class = ReviewHotelListSerializer
+
+    def get_queryset(self):
+        hotel_id = self.kwargs.get('hotel_id')
+        return ReviewHotel.objects.filter(hotel=hotel_id)
+
+class ReviewRestaurantCreateAPIView(generics.CreateAPIView):
+    serializer_class = ReviewRestaurantSerializer
+    permissions_classes = [permissions.IsAuthenticated]
+
+
+
+class ReviewRestaurantDeleteAPIView(generics.DestroyAPIView):
+    queryset = ReviewRestaurant.objects.all()
+    serializer_class = ReviewRestaurantSerializer
+    permissions_classes = [permissions.IsAuthenticated, UserEdit]
+
+class ReviewRestaurantListAPIView(generics.ListAPIView):
+    queryset = ReviewRestaurant.objects.all()
+    serializer_class = ReviewRestaurantListSerializer
+
+    def get_queryset(self):
+        restaurant_id = self.kwargs.get('restaurant_id')
+        return ReviewRestaurant.objects.filter(restaurant=restaurant_id)
+
+
+class ReviewAttractionCreateAPIView(generics.CreateAPIView):
+    serializer_class = ReviewAttractionSerializer
+    permissions_classes = [permissions.IsAuthenticated]
+
+class ReviewAttractionDeleteAPIView(generics.DestroyAPIView):
+    queryset = ReviewAttraction.objects.all()
+    serializer_class = ReviewAttractionSerializer
+    permissions_classes = [permissions.IsAuthenticated, UserEdit]
+
+
+class ReviewAttractionListAPIView(generics.ListAPIView):
+    queryset = ReviewAttraction.objects.all()
+    serializer_class = ReviewAttractionListSerializer
+
+    def get_queryset(self):
+        attraction_id = self.kwargs.get('attraction_id')
+        return ReviewAttraction.objects.filter(attraction=attraction_id)
+
 
 class HomeAttractionAPIView(generics.ListAPIView):
     queryset = Attraction.objects.all()
     serializer_class = AttractionHomeSerializer
-
-
-class CultureVarietyAPIView(generics.ListAPIView):
-    queryset = CultureVariety.objects.all()
-    serializer_class = CultureVarietySerializer
 
 
 class HomeCultureAPIView(generics.ListAPIView):
