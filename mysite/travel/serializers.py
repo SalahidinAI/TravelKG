@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics
 from django.utils import timezone
 from .models import *
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -11,9 +11,11 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django_rest_passwordreset.models import ResetPasswordToken
 from phonenumber_field.serializerfields import PhoneNumberField
-
+from datetime import date
 
 User = get_user_model()
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
 
@@ -102,6 +104,7 @@ class CustomLoginSerializer(serializers.Serializer):
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
+
 class VerifyResetCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()
     reset_code = serializers.IntegerField()
@@ -138,6 +141,55 @@ class VerifyResetCodeSerializer(serializers.Serializer):
         token.delete()
 
 
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = ['id', 'country_name']
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ['id', 'city_name']
+
+
+class UserProfileSimpleSerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+    city = CitySerializer()
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city']
+
+
+class UserProfileListSerializer(serializers.ModelSerializer):
+    country = CountrySerializer()
+    city = CitySerializer()
+
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city', 'profile_photo',
+                  'banner']
+
+
+class UserProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'username', 'last_name', 'country', 'city', 'profile_photo',
+                  'banner', 'email', 'password', 'phone_number', 'birthday']
+
+    def validate_email(self, value):
+        user_id = self.instance.id if self.instance else None
+        if UserProfile.objects.exclude(id=user_id).filter(email=value).exists():
+            raise serializers.ValidationError("Этот email уже используется.")
+        return value
+
+    def validate_birthday(self, value):
+        if value > date.today():
+            raise serializers.ValidationError("Дата рождения не может быть в будущем.")
+        return value
+
+
 # class UserProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = UserProfile
@@ -152,24 +204,6 @@ class VerifyResetCodeSerializer(serializers.Serializer):
 class TravelRequestSerializer(serializers.Serializer):
     from_city = serializers.CharField()
     to_city = serializers.CharField()
-
-
-class CountrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Country
-        fields = '__all__'
-
-
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = '__all__'
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = '__all__'
 
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -196,10 +230,256 @@ class RegionMealSerializer(serializers.ModelSerializer):
         fields = ['id', 'meal_name', 'description', 'meal_image1', 'meal_image2', 'meal_image3']
 
 
-class PlaceSerializer(serializers.ModelSerializer):
+class PlaceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
-        fields = '__all__'
+        fields = ['id', 'place_name', 'place_image']
+
+
+class EventTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EventType
+        fields = ['id', 'event_type']
+
+
+class EventSerializer(serializers.ModelSerializer):
+    event_type = EventTypeSerializer()
+
+    class Meta:
+        model = Event
+        fields = ['id', 'event_type', 'image', 'title', 'description', 'date', 'ticket', 'address']
+
+
+class AttractionListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attraction
+        fields = ['id', 'title', 'image1']
+
+
+class ReviewPlaceListSerializer(serializers.ModelSerializer):
+    user = UserProfileListSerializer()
+
+    class Meta:
+        model = ReviewPlace
+        fields = ['id', 'user', 'service_score', 'photo1', 'photo2', 'photo3',
+                  'text', 'parent', 'created_date']
+
+
+class PlaceDetailSerializer(serializers.ModelSerializer):
+    place_reviews = ReviewPlaceListSerializer(many=True, read_only=True)
+    avg_rating = serializers.SerializerMethodField()
+    count_reviews = serializers.SerializerMethodField()
+    level_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Place
+        fields = ['id', 'place_name', 'place_image', 'description', 'temperature',
+                  'avg_rating', 'count_reviews', 'level_rating', 'place_reviews']
+
+    def get_avg_rating(self, obj):
+        return obj.get_avg_rating()
+
+    def get_count_reviews(self, obj):
+        return obj.get_count_reviews()
+
+    def get_level_rating(self, obj):
+        return obj.get_level_rating()
+
+
+class ReviewAttractionListSerializer(serializers.ModelSerializer):
+    user = UserProfileListSerializer()
+
+    class Meta:
+        model = ReviewAttraction
+        fields = ['id', 'user', 'parent', 'service_score', 'text',
+                  'photo1', 'photo2', 'photo3', 'created_date']
+
+
+class AttractionDetailSerializer(serializers.ModelSerializer):
+    review_attraction = ReviewAttractionListSerializer(many=True, read_only=True)
+    total_reviews = serializers.SerializerMethodField()
+    avg_review = serializers.SerializerMethodField()
+    level_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Attraction
+        fields = ['id', 'title', 'description', 'image1', 'image2', 'image3', 'image4',
+                  'total_reviews', 'avg_review', 'level_rating', 'review_attraction']
+
+    def get_total_reviews(self, obj):
+        return obj.get_total_reviews()
+
+    def get_avg_review(self, obj):
+        return obj.get_avg_review()
+
+    def get_level_rating(self, obj):
+        return obj.get_level_rating()
+
+
+class MealTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealType
+        fields = ['id', 'meal_type']
+
+
+class SpecializedMenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecializedMenu
+        fields = ['id', 'specialized_menu']
+
+
+class MealTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealTime
+        fields = ['id', 'meal_time']
+
+
+class RestaurantImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantImage
+        fields = ['id', 'restaurant_image']
+
+
+class RestaurantListSerializer(serializers.ModelSerializer):
+    restaurant_images = RestaurantImageSerializer(read_only=True, many=True)
+    meal_type = MealTypeSerializer(many=True, read_only=True)
+    rating = serializers.SerializerMethodField()
+    total_images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'restaurant_images', 'restaurant_name', 'meal_type', 'low_price', 'high_price',
+                  'total_images', 'rating']
+
+    def get_total_images(self, obj):
+        return obj.get_total_images()
+
+    def get_rating(self, obj):
+        return obj.get_rating()
+
+
+class ReviewRestaurantListSerializer(serializers.ModelSerializer):
+    user = UserProfileListSerializer()
+
+    class Meta:
+        model = ReviewRestaurant
+        fields = ['id', 'user', 'photo1', 'photo2', 'photo3', 'text', 'service_score', 'nutrition_score', 'price_score',
+                  'atmosphere_score', 'parent', 'created_date']
+
+
+class RestaurantDetailSerializer(serializers.ModelSerializer):
+    restaurant_images = RestaurantImageSerializer(read_only=True, many=True)
+    meal_type = MealTypeSerializer(many=True)
+    specialized_menu = SpecializedMenuSerializer(many=True)
+    meal_time = MealTimeSerializer(many=True)
+    review_restaurant = ReviewRestaurantListSerializer(read_only=True, many=True)
+    total_images = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+    level_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'restaurant_images', 'restaurant_name', 'low_price', 'high_price', 'meal_type',
+                  'specialized_menu', 'meal_time', 'address', 'phone', 'total_images', 'rating', 'level_rating', 'review_restaurant']
+
+    def get_total_images(self, obj):
+        return obj.get_total_images()
+
+    def get_rating(self, obj):
+        return obj.get_rating()
+
+    def get_level_rating(self, obj):
+        return obj.get_level_rating()
+
+
+class HotelImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelImage
+        fields = ['id', 'hotel_image']
+
+
+class HotelListSerializer(serializers.ModelSerializer):
+    hotel_images = HotelImageSerializer(read_only=True, many=True)
+    avg_rating = serializers.SerializerMethodField()
+    count_review = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Hotel
+        fields = ['id', 'hotel_images', 'hotel_name', 'avg_rating', 'count_review']
+
+    def get_avg_rating(self, obj):
+        return obj.get_avg_rating()
+
+    def get_count_review(self, obj):
+        return obj.get_count_review()
+
+
+class HotelHygieneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelHygiene
+        fields = ['id', 'hygiene_title']
+
+
+class HotelContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HotelContact
+        fields = ['id', 'hotel_contact']
+
+
+class ReviewHotelListSerializer(serializers.ModelSerializer):
+    user = UserProfileListSerializer()
+
+    class Meta:
+        model = ReviewHotel
+        fields = ['id', 'user', 'service_score', 'photo1', 'photo2', 'photo3',
+                  'text', 'parent', 'created_date']
+
+
+class HotelDetailSerializer(serializers.ModelSerializer):
+    hotel_images = HotelImageSerializer(read_only=True, many=True)
+    hotel_hygiene = HotelHygieneSerializer(read_only=True, many=True)
+    owner = UserProfileSimpleSerializer()
+    hotel_contacts = HotelContactSerializer(read_only=True, many=True)
+    avg_rating = serializers.SerializerMethodField()
+    count_review = serializers.SerializerMethodField()
+    level_rating = serializers.SerializerMethodField()
+    review_hotel = ReviewHotelListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Hotel
+        fields = ['id', 'owner', 'hotel_images', 'hotel_name', 'low_price', 'high_price', 'bedrooms', 'bathrooms',
+                  'cars', 'bikes', 'pets', 'address', 'description', 'kitchen', 'air', 'washer', 'tv', 'wifi',
+                  'balcony', 'parking', 'hair_dryer', 'towel', 'iron', 'hotel_hygiene', 'hotel_contacts',
+                  'avg_rating', 'count_review', 'level_rating', 'review_hotel']
+
+    def get_avg_rating(self, obj):
+        return obj.get_avg_rating()
+
+    def get_count_review(self, obj):
+        return obj.get_count_review()
+
+    def get_level_rating(self, obj):
+        return obj.get_level_rating()
+
+
+class CultureListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CultureVariety
+        fields = ['id', 'culture_variety_name']
+
+
+class CultureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Culture
+        fields = ['id', 'culture_name', 'image', 'description']
+
+
+class CultureDetailSerializer(serializers.ModelSerializer):
+    cultures = CultureSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = CultureVariety
+        fields = ['id', 'culture_variety_name', 'cultures']
 
 
 class RegionTitleSerializer(serializers.ModelSerializer):
@@ -250,75 +530,15 @@ class FavoritePlaceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class HotelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Hotel
-        fields = '__all__'
-
-
-class HotelImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelImage
-        fields = '__all__'
-
-
-class HotelHygieneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelHygiene
-        fields = '__all__'
-
-
-class HotelContactSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HotelContact
-        fields = '__all__'
-
-
 class FavoriteHotelSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteHotel
         fields = '__all__'
 
 
-class ReviewHotelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReviewHotel
-        fields = '__all__'
-
-
 class ReviewHotelLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewHotelLike
-        fields = '__all__'
-
-
-class MealTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MealType
-        fields = '__all__'
-
-
-class SpecializedMenuSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SpecializedMenu
-        fields = '__all__'
-
-
-class MealTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MealTime
-        fields = '__all__'
-
-
-class RestaurantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Restaurant
-        fields = '__all__'
-
-
-class RestaurantImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RestaurantImage
         fields = '__all__'
 
 
@@ -337,24 +557,6 @@ class ReviewRestaurantSerializer(serializers.ModelSerializer):
 class ReviewRestaurantLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewRestaurantLike
-        fields = '__all__'
-
-
-class EventTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventType
-        fields = '__all__'
-
-
-class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = '__all__'
-
-
-class AttractionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Attraction
         fields = '__all__'
 
 
@@ -385,21 +587,15 @@ class ReviewAttractionLikeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReviewHotelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewHotel
+        fields = '__all__'
+
+
 class FavoriteAttractionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteAttraction
-        fields = '__all__'
-
-
-class CultureVarietySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CultureVariety
-        fields = '__all__'
-
-
-class CultureSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Culture
         fields = '__all__'
 
 
@@ -423,15 +619,3 @@ class GalleryListSerializer(serializers.ModelSerializer):
 
     def get_count_reviews(self, obj):
         return obj.get_count_reviews()
-
-
-class CultureListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CultureVariety
-        fields = ['id', 'culture_variety_name']
-
-
-class CultureDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Culture
-        fields = ['id', 'culture_name', 'image', 'description']

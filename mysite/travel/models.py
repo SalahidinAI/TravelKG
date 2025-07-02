@@ -94,6 +94,7 @@ class RegionMeal(models.Model):
         return f'{self.region} {self.meal_name}'
 
 
+# def function
 class Place(models.Model):
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
     place_name = models.CharField(max_length=64, unique=True)
@@ -114,6 +115,17 @@ class Place(models.Model):
     def get_count_reviews(self):
         all_reviews = self.place_reviews.all()
         return all_reviews.count()
+
+    def get_level_rating(self):
+        all_reviews = self.place_reviews.all()
+        ratings = [i.service_score for i in all_reviews if i.service_score]
+        return {
+            'excellent': ratings.count(5),
+            'good': ratings.count(4),
+            'not_bad': ratings.count(3),
+            'bad': ratings.count(2),
+            'terribly': ratings.count(1),
+        }
 
 
 # class PlaceMap(models.Model):
@@ -218,9 +230,31 @@ class Hotel(models.Model):
         if self.low_price > self.high_price:
             raise ValidationError("'low_price' can't be higher than 'high_price'")
 
+    def get_avg_rating(self):
+        all_reviews = self.review_hotel.all()
+        if all_reviews.exists():
+            ratings = [i.service_score for i in all_reviews if i.service_score]
+            return sum(ratings) / len(ratings)
+        return 0
+
+    def get_count_review(self):
+        all_reviews = self.review_hotel.all()
+        return len(all_reviews)
+
+    def get_level_rating(self):
+        all_reviews = self.review_hotel.all()
+        ratings = [i.service_score for i in all_reviews if i.service_score]
+        return {
+            'excellent': ratings.count(5),
+            'good': ratings.count(4),
+            'not_bad': ratings.count(3),
+            'bad': ratings.count(2),
+            'terribly': ratings.count(1),
+        }
+
 
 class HotelImage(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_images')
     hotel_image = models.ImageField(upload_to='hotel_images/')
 
     def __str__(self):
@@ -228,7 +262,7 @@ class HotelImage(models.Model):
 
 
 class HotelHygiene(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_hygiene')
     hygiene_title = models.CharField(max_length=64, unique=True)
 
     def __str__(self):
@@ -236,7 +270,7 @@ class HotelHygiene(models.Model):
 
 
 class HotelContact(models.Model):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_contacts')
     hotel_contact = PhoneNumberField(unique=True)
 
     def __str__(self):
@@ -257,7 +291,7 @@ class FavoriteHotel(models.Model):
 
 # add filter to review
 class ReviewHotel(AbstractReview):
-    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='review_hotel')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -316,9 +350,61 @@ class Restaurant(models.Model):
         if self.low_price > self.high_price:
             raise ValidationError("'low_price' can't be higher than 'high_price'")
 
+    def get_total_images(self):
+        all_images = self.restaurant_images.all()
+        return len(all_images)
+
+    def get_rating(self):
+        all_reviews = self.review_restaurant.all()
+        if all_reviews.exists():
+            all_stars = []
+            for i in all_reviews:
+                if i.nutrition_score:
+                    all_stars.append(i.nutrition_score)
+                if i.price_score:
+                    all_stars.append(i.price_score)
+                if i.atmosphere_score:
+                    all_stars.append(i.atmosphere_score)
+                if i.service_score:
+                    all_stars.append(i.service_score)
+            return {
+                'avg_rating': sum(all_stars) / len(all_stars) ,
+                'all_reviews': len(all_stars),
+                    }
+        return 0
+
+    def get_level_rating(self):
+        all_reviews = self.review_restaurant.all()
+        dic = {
+            1: [], 2: [], 3: [], 4: [], 5: [],
+        }
+        for i in all_reviews:
+            service_score = i.service_score
+            if service_score in dic:
+                dic[service_score].append(service_score)
+
+            price_score = i.price_score
+            if price_score in dic:
+                dic[price_score].append(price_score)
+
+            nutrition_score = i.nutrition_score
+            if nutrition_score in dic:
+                dic[nutrition_score].append(nutrition_score)
+
+            atmosphere_score = i.atmosphere_score
+            if atmosphere_score in dic:
+                dic[atmosphere_score].append(atmosphere_score)
+        return {
+            'excellent': sum(dic[5]),
+            'good': sum(dic[4]),
+            'not_bad': sum(dic[3]),
+            'bad': sum(dic[2]),
+            'terribly': sum(dic[1]),
+        }
+
 
 class RestaurantImage(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='restaurant_images')
     restaurant_image = models.ImageField(upload_to='restaurant_images/')
 
     def __str__(self):
@@ -339,7 +425,7 @@ class FavoriteRestaurant(models.Model):
 
 # check,p Are scores working well?
 class ReviewRestaurant(AbstractReview):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='review_restaurant')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     nutrition_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     price_score = models.PositiveSmallIntegerField(choices=[(i, str(i)) for i in range(1, 6)])
@@ -368,7 +454,7 @@ class EventType(models.Model):
 
 
 class Event(models.Model):
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='place_events')
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='event_image/')
     title = models.CharField(max_length=64)
@@ -383,7 +469,7 @@ class Event(models.Model):
 
 # def review quantity / avg review
 class Attraction(models.Model):
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='place_attractions')
     title = models.CharField(max_length=128, unique=True)
     description = models.TextField()
     country = models.ManyToManyField(Country)
@@ -398,18 +484,30 @@ class Attraction(models.Model):
         return f'{self.place} {self.title}'
 
     def get_total_reviews(self):
-        total_reviews = self.reviews.all()
+        total_reviews = self.review_attraction.all()
         return total_reviews.count()
 
     def get_avg_review(self):
-        all_reviews = self.reviews.all()
+        all_reviews = self.review_attraction.all()
         if all_reviews.exists():
             return sum([i.service_score for i in all_reviews if i.service_score]) / all_reviews.count()
         return 0
 
+    def get_level_rating(self):
+        all_reviews = self.review_attraction.all()
+        ratings = [i.service_score for i in all_reviews if i.service_score]
+        return {
+            'excellent': ratings.count(5),
+            'good': ratings.count(4),
+            'not_bad': ratings.count(3),
+            'bad': ratings.count(2),
+            'terribly': ratings.count(1),
+        }
 
+
+# function
 class ReviewAttraction(AbstractReview):
-    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE, related_name='reviews')
+    attraction = models.ForeignKey(Attraction, on_delete=models.CASCADE, related_name='review_attraction')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -447,7 +545,7 @@ class CultureVariety(models.Model):
 
 
 class Culture(models.Model):
-    culture_variety = models.ForeignKey(CultureVariety, on_delete=models.CASCADE)
+    culture_variety = models.ForeignKey(CultureVariety, on_delete=models.CASCADE, related_name='cultures')
     culture_name = models.CharField(max_length=64, unique=True)
     image = models.ImageField(upload_to='culture_images/')
     description = models.TextField()
