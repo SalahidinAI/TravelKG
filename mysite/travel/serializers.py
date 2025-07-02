@@ -202,6 +202,12 @@ class PlaceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class RegionTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = ['id', 'region_name']
+
+
 class RegionPlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
@@ -398,6 +404,34 @@ class CultureSerializer(serializers.ModelSerializer):
 
 
 class CultureHomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Culture
+        fields = ['id', 'culture_name', 'image', 'description']
+
+
+class GalleryListSerializer(serializers.ModelSerializer):
+    region = RegionTitleSerializer()
+    avg_rating = serializers.SerializerMethodField()
+    count_reviews = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Place
+        fields = ['id', 'place_name', 'place_image', 'region', 'avg_rating', 'count_reviews']
+
+    def get_avg_rating(self, obj):
+        return obj.get_avg_rating()
+
+    def get_count_reviews(self, obj):
+        return obj.get_count_reviews()
+
+
+class CultureListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CultureVariety
+        fields = ['id', 'culture_variety_name']
+
+
+class CultureDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Culture
         fields = ['id', 'culture_name', 'image', 'description']

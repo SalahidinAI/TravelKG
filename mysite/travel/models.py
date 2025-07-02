@@ -104,6 +104,17 @@ class Place(models.Model):
     def __str__(self):
         return f'{self.region} {self.place_name}'
 
+    def get_avg_rating(self):
+        all_reviews = self.place_reviews.all()
+        scores = [i.service_score for i in all_reviews if i.service_score]
+        if scores:
+            return sum(scores) / len(scores)
+        return 0
+
+    def get_count_reviews(self):
+        all_reviews = self.place_reviews.all()
+        return all_reviews.count()
+
 
 # class PlaceMap(models.Model):
 #     place =  models.ForeignKey(Place, on_delete=models.CASCADE)
@@ -131,7 +142,7 @@ class AbstractReview(models.Model):
 
 
 class ReviewPlace(AbstractReview):
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name='place_reviews')
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
     def __str__(self):

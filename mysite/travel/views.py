@@ -219,6 +219,21 @@ class HomeCultureAPIView(generics.ListAPIView):
         return Culture.objects.filter(culture_variety__culture_variety_name='Home page')
 
 
+class GalleryListAPIView(generics.ListAPIView):
+    queryset = Place.objects.all()
+    serializer_class = GalleryListSerializer
+
+
+class CultureListAPIView(generics.ListAPIView):
+    queryset = CultureVariety.objects.all()
+    serializer_class = CultureListSerializer
+
+
+class CultureDetailSerializer(generics.RetrieveAPIView):
+    queryset = Culture.objects.all()
+    serializer_class = CultureDetailSerializer
+
+
 @api_view(['POST'])
 def toggle_review_place_like(request, review_place_id):
     try:

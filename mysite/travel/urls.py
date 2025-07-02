@@ -15,6 +15,9 @@ urlpatterns = [
          name='review_restaurant_like'),
 
     path("distance/", TravelDistanceAPIView.as_view(), name="distance"),
+    path('gallery/', GalleryListAPIView.as_view(), name='gallery_list'),
+    path('culture/', CultureListAPIView.as_view(), name='culture_list'),
+    path('culture/<int:pk>/', CultureDetailSerializer.as_view(), name='culture_detail'),
 
     path('home/place/', HomePlaceAPIView.as_view(), name='home_place_list'),
     path('home/attraction/', HomeAttractionAPIView.as_view(), name='home_attraction_list'),
@@ -54,5 +57,4 @@ urlpatterns = [
 
     path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('password_reset/verify_code/', verify_reset_code, name='verify_reset_code'),
-
 ]
