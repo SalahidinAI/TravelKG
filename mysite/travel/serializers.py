@@ -14,8 +14,6 @@ from phonenumber_field.serializerfields import PhoneNumberField
 from datetime import date
 
 User = get_user_model()
-
-
 class UserRegistrationSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True)
 
@@ -288,7 +286,6 @@ class PlaceDetailSerializer(serializers.ModelSerializer):
 
 class ReviewAttractionListSerializer(serializers.ModelSerializer):
     user = UserProfileListSerializer()
-
     class Meta:
         model = ReviewAttraction
         fields = ['id', 'user', 'parent', 'service_score', 'text',
@@ -524,16 +521,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FavoritePlaceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FavoritePlace
-        fields = '__all__'
-
-
-class FavoriteHotelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FavoriteHotel
-        fields = '__all__'
 
 
 class ReviewHotelLikeSerializer(serializers.ModelSerializer):
@@ -541,11 +528,6 @@ class ReviewHotelLikeSerializer(serializers.ModelSerializer):
         model = ReviewHotelLike
         fields = '__all__'
 
-
-class FavoriteRestaurantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FavoriteRestaurant
-        fields = '__all__'
 
 
 class ReviewRestaurantSerializer(serializers.ModelSerializer):
@@ -593,11 +575,6 @@ class ReviewHotelSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FavoriteAttractionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FavoriteAttraction
-        fields = '__all__'
-
 
 class CultureHomeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -619,3 +596,101 @@ class GalleryListSerializer(serializers.ModelSerializer):
 
     def get_count_reviews(self, obj):
         return obj.get_count_reviews()
+
+class FavoritePlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoritePlace
+        fields = ['id', 'place', 'created_date']
+
+class FavoriteHotelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteHotel
+        fields = ['id', 'hotel', 'created_date']
+
+class FavoriteRestaurantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteRestaurant
+        fields = ['id', 'restaurant', 'created_date']
+
+class FavoriteAttractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FavoriteAttraction
+        fields = ['id', 'attraction', 'created_date']
+
+class AddressHotelSerializer(serializers.ModelSerializer):
+    hotel_images = HotelImageSerializer(many=True, read_only=True)
+    hotel_contacts = HotelContactSerializer(many=True, read_only=True)
+    class Meta:
+        model = Hotel
+        fields = ['id', 'hotel_name', 'address', 'hotel_images', 'hotel_contacts']
+
+class AddressRestaurantSerializer(serializers.ModelSerializer):
+    restaurant_images = RestaurantImageSerializer(many=True, read_only=True)
+    class Meta:
+        model = Restaurant
+        fields = ['id', 'address', 'restaurant_images', 'phone']
+
+class AddressAttractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attraction
+        fields = ['id', 'image1', 'title']
+
+class AddressPlaceSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Place
+        fields = ['id', 'place_image', 'place_name']
+
+from django.db.models import Count
+class BaseReviewSerializer(serializers.ModelSerializer):
+    likes_count = serializers.IntegerField()
+    author = UserProfileListSerializer(source='user', read_only=True)  # добавляем автора
+    parent = serializers.PrimaryKeyRelatedField(read_only=True)  # добавляем parent
+
+    class Meta:
+        fields = ['id', 'created_date', 'text', 'likes_count', 'author', 'parent']
+class HotelReviewSerializer(BaseReviewSerializer):
+    hotel = AddressHotelSerializer(read_only=True)  # сам отель
+    type = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return 'hotel'
+
+    class Meta(BaseReviewSerializer.Meta):
+        model = ReviewHotel
+        fields = BaseReviewSerializer.Meta.fields + ['hotel', 'type']
+
+
+class RestaurantReviewSerializer(BaseReviewSerializer):
+    restaurant = AddressRestaurantSerializer(read_only=True)  # сам ресторан
+    type = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return 'restaurant'
+
+    class Meta(BaseReviewSerializer.Meta):
+        model = ReviewRestaurant
+        fields = BaseReviewSerializer.Meta.fields + ['restaurant', 'type']
+
+
+class AttractionReviewSerializer(BaseReviewSerializer):
+    attraction = AddressAttractionSerializer(read_only=True)  # сам аттракцион
+    type = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return 'attraction'
+
+    class Meta(BaseReviewSerializer.Meta):
+        model = ReviewAttraction
+        fields = BaseReviewSerializer.Meta.fields + ['attraction', 'type']
+
+
+class PlaceReviewSerializer(BaseReviewSerializer):
+    place = AddressPlaceSerializers(read_only=True)  # сам плейс
+    type = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return 'place'
+
+    class Meta(BaseReviewSerializer.Meta):
+        model = ReviewPlace
+        fields = BaseReviewSerializer.Meta.fields + ['place', 'type']

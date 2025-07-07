@@ -118,11 +118,6 @@ class HomePlaceAPIView(generics.ListAPIView):
         return Place.objects.filter(place_name='Bishkek')
 
 
-class AbstractReviewAPIView(generics.ListAPIView):
-    queryset = AbstractReview.objects.all()
-    serializer_class = AbstractReviewSerializer
-
-
 class ReviewPlaceCreateAPIView(generics.CreateAPIView):
     serializer_class = ReviewPlaceSerializer
     permissions_classes = [permissions.IsAuthenticated]
@@ -139,16 +134,35 @@ class ReviewPlaceLikeAPIView(generics.ListAPIView):
     serializer_class = ReviewPlaceLikeSerializer
 
 
-class FavoriteAPIView(generics.ListAPIView):
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
 
 
-class FavoritePlaceAPIView(generics.ListAPIView):
-    queryset = FavoritePlace.objects.all()
-    serializer_class = FavoritePlaceSerializer
 
+class MyAllReviewsListAPIView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Получаем отзывы с аннотацией
+        hotel_reviews_qs = ReviewHotel.objects.filter(user=user).annotate(likes_count=Count('reviewhotellike')).order_by('-created_date')
+        restaurant_reviews_qs = ReviewRestaurant.objects.filter(user=user).annotate(likes_count=Count('reviewrestaurantlike')).order_by('-created_date')
+        attraction_reviews_qs = ReviewAttraction.objects.filter(user=user).annotate(likes_count=Count('reviewattractionlike')).order_by('-created_date')
+        place_reviews_qs = ReviewPlace.objects.filter(user=user).annotate(likes_count=Count('reviewplacelike')).order_by('-created_date')
+
+        # Сериализуем
+        hotel_reviews = HotelReviewSerializer(hotel_reviews_qs, many=True).data
+        restaurant_reviews = RestaurantReviewSerializer(restaurant_reviews_qs, many=True).data
+        attraction_reviews = AttractionReviewSerializer(attraction_reviews_qs, many=True).data
+        place_reviews = PlaceReviewSerializer(place_reviews_qs, many=True).data
+
+        # Объединяем и сортируем
+        all_reviews = hotel_reviews + restaurant_reviews + attraction_reviews + place_reviews
+        all_reviews.sort(key=lambda x: x['created_date'], reverse=True)
+
+        return Response({
+            'total_reviews': len(all_reviews),
+            'reviews': all_reviews
+        })
 class PlaceListAPIView(generics.ListAPIView):
     queryset = Place.objects.all()
     serializer_class = PlaceListSerializer
@@ -373,3 +387,100 @@ class TravelDistanceAPIView(APIView):
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FavoritePlaceCreateView(generics.CreateAPIView):
+    serializer_class = FavoritePlaceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        favorite, _ = Favorite.objects.get_or_create(user=user)
+        place = serializer.validated_data['place']
+        FavoritePlace.objects.get_or_create(favorite=favorite, place=place)
+
+class FavoriteHotelCreateView(generics.CreateAPIView):
+    serializer_class = FavoriteHotelSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        favorite, _ = Favorite.objects.get_or_create(user=user)
+        hotel = serializer.validated_data['hotel']
+        FavoriteHotel.objects.get_or_create(favorite=favorite, hotel=hotel)
+
+class FavoriteRestaurantCreateView(generics.CreateAPIView):
+    serializer_class = FavoriteRestaurantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        favorite, _ = Favorite.objects.get_or_create(user=user)
+        restaurant = serializer.validated_data['restaurant']
+        FavoriteRestaurant.objects.get_or_create(favorite=favorite, restaurant=restaurant)
+
+class FavoriteAttractionCreateView(generics.CreateAPIView):
+    serializer_class = FavoriteAttractionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        favorite, _ = Favorite.objects.get_or_create(user=user)
+        attraction = serializer.validated_data['attraction']
+        FavoriteAttraction.objects.get_or_create(favorite=favorite, attraction=attraction)
+
+# Удалить из избранного
+class FavoritePlaceDeleteView(generics.DestroyAPIView):
+    queryset = FavoritePlace.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+
+
+class FavoriteHotelDeleteView(generics.DestroyAPIView):
+    queryset = FavoriteHotel.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+class FavoriteRestaurantDeleteView(generics.DestroyAPIView):
+    queryset = FavoriteRestaurant.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+class FavoriteAttractionDeleteView(generics.DestroyAPIView):
+    queryset = FavoriteAttraction.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'id'
+
+# Посмотреть все избранное пользователя
+class FavoritePlaceListView(generics.ListAPIView):
+    serializer_class = FavoritePlaceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return FavoritePlace.objects.filter(favorite__user=user)
+
+class FavoriteHotelListView(generics.ListAPIView):
+    serializer_class = FavoriteHotelSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return FavoriteHotel.objects.filter(favorite__user=user)
+
+class FavoriteRestaurantListView(generics.ListAPIView):
+    serializer_class = FavoriteRestaurantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return FavoriteRestaurant.objects.filter(favorite__user=user)
+
+class FavoriteAttractionListView(generics.ListAPIView):
+    serializer_class = FavoriteAttractionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return FavoriteAttraction.objects.filter(favorite__user=user)
+

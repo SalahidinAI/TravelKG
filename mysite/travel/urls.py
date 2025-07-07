@@ -62,5 +62,31 @@ urlpatterns = [
 
     path('password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('password_reset/verify_code/', verify_reset_code, name='verify_reset_code'),
+
+    # Places
+    path('favorite/places/add/', FavoritePlaceCreateView.as_view(), name='favorite-place-add'),
+    path('favorite/places/delete/<int:id>/', FavoritePlaceDeleteView.as_view(), name='favorite-place-delete'),
+    path('favorite/places/', FavoritePlaceListView.as_view(), name='favorite-places-list'),
+
+    # Hotels
+    path('favorite/hotels/add/', FavoriteHotelCreateView.as_view(), name='favorite-hotel-add'),
+    path('favorite/hotels/delete/<int:id>/', FavoriteHotelDeleteView.as_view(), name='favorite-hotel-delete'),
+    path('favorite/hotels/', FavoriteHotelListView.as_view(), name='favorite-hotels-list'),
+
+    # Restaurants
+    path('favorite/restaurants/add/', FavoriteRestaurantCreateView.as_view(), name='favorite-restaurant-add'),
+    path('favorite/restaurants/delete/<int:id>/', FavoriteRestaurantDeleteView.as_view(), name='favorite-restaurant-delete'),
+    path('favorite/restaurants/', FavoriteRestaurantListView.as_view(), name='favorite-restaurants-list'),
+
+    # Attractions
+    path('favorite/attractions/add/', FavoriteAttractionCreateView.as_view(), name='favorite-attraction-add'),
+    path('favorite/attractions/delete/<int:id>/', FavoriteAttractionDeleteView.as_view(), name='favorite-attraction-delete'),
+    path('favorite/attractions/', FavoriteAttractionListView.as_view(), name='favorite-attractions-list'),
+
+    path('my-reviews/', MyAllReviewsListAPIView.as_view(), name='my-all-reviews'),
 ]
+
+
+
+
 
