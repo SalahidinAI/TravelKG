@@ -85,8 +85,3 @@ urlpatterns = [
 
     path('my-reviews/', MyAllReviewsListAPIView.as_view(), name='my-all-reviews'),
 ]
-
-
-
-
-
